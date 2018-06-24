@@ -79,6 +79,8 @@ def read_preprocess_data(file_path, shuffle=False):
     data = dataset[1:]
 
     X = [np.array(d[:-1]) for d in data]
+    X = [float(i) for x in X for i in x]
+
     Y = [d[-1].strip() for d in data]
 
     # encode classes as int
