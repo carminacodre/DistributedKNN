@@ -42,7 +42,6 @@ def split_data(dataset, nr_splits, test_factor , fshuffle=True , dest_dir='data'
     if fshuffle:
         shuffle(data)
 
-
     # save the test samples separately
     test_data = data[:int(len(data) * test_factor)]
     data = data[int(len(data) * test_factor):]
@@ -53,6 +52,16 @@ def split_data(dataset, nr_splits, test_factor , fshuffle=True , dest_dir='data'
         writer.writerow(header)
         writer.writerows(test_data)
 
+    print(len(test_data))
+
+    # save the data separately
+    data_file = os.path.join(dest_dir, 'train.csv')
+    with open(data_file, 'w') as f:
+        writer = csv.writer(f, delimiter=',')
+        writer.writerow(header)
+        writer.writerows(data)
+
+    print(len(data))
 
     # save the rest of the files
     num_samples = len(data) // nr_splits
@@ -71,15 +80,14 @@ def split_data(dataset, nr_splits, test_factor , fshuffle=True , dest_dir='data'
 
     print("Data splitted into test and separate files")
 
-def read_preprocess_data(file_path, shuffle=False):
+def read_preprocess_data(file_path):
 
     dataset = read_data(file_path)
     header = dataset[0]
     print("Header:" + str(header))
     data = dataset[1:]
 
-    X = [np.array(d[:-1]) for d in data]
-    X = [float(i) for x in X for i in x]
+    X = [np.array([float(x) for x in d[:-1]]) for d in data]
 
     Y = [d[-1].strip() for d in data]
 
@@ -87,7 +95,3 @@ def read_preprocess_data(file_path, shuffle=False):
     Y = [data_encoding[y] for y in Y]
 
     return X, Y
-
-if __name__ == '__main__':
-    dataset = read_data('data/dataset0.csv')
-    split_data(dataset, 4, 0.15)

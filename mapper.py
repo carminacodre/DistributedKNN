@@ -8,6 +8,8 @@ import pickle
 
 class ThreadReducer(threading.Thread):
     def __init__(self, nr, file_name, k, dist, test_samples, dest='data'):
+        threading.Thread.__init__(self)
+
         self.nr = nr
         self.file_name = file_name
         self.k = k
@@ -35,30 +37,33 @@ class Mapper:
         self.distance = distance
         self.threads =[]
 
-    def start_threads(self):
+    def run_threads(self):
         for t in self.threads:
             t.start()
-
-    def map_and_start(self, file_list, test_samples, dest):
-        self.map_files(file_list, test_samples, dest)
-        self.start_threads()
+        for t in self.threads:
+            t.join()
+            print('Thread finished {}'.format(t.nr))
 
 class MapperDifferentSources(Mapper):
     def __init__(self, k, distance):
-        Mapper.__init__(k, distance)
+        super().__init__(k, distance)
 
-    def map_files(self, file_list, test_samples, dest):
+    def map_files(self, file_list, test_samples, dest='res_diffsources/'):
 
         self.threads = []
 
         for i,f in enumerate(file_list):
             self.threads.append(ThreadReducer(i, f, self.k, self.distance, test_samples, dest))
 
-class MapperDifferentTestSamples:
-    def __init__(self, k, distance):
-        Mapper.__init__(k, distance)
+    def map_and_start(self, file_list, test_samples, dest='res_diffsources/'):
+        self.map_files(file_list, test_samples, dest)
+        self.run_threads()
 
-    def map_files(self, data_file, nr_threads ,test_samples, dest):
+class MapperDifferentTestSamples(Mapper):
+    def __init__(self, k, distance):
+        super().__init__(k, distance)
+
+    def map_files(self, data_file, nr_threads, test_samples, dest='res_difftest/'):
 
         self.threads = []
         nr_test_samples = len(test_samples) // nr_threads
@@ -73,3 +78,7 @@ class MapperDifferentTestSamples:
                 self.threads.append(ThreadReducer(i, data_file, self.k, self.distance,
                                                   test_samples[(i * nr_test_samples):],
                                                   dest))
+
+    def map_and_start(self, data_file, nr_threads, test_samples, dest='res_difftest/'):
+        self.map_files(data_file, nr_threads, test_samples, dest)
+        self.run_threads()

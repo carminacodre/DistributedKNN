@@ -1,5 +1,5 @@
-import numpy as np
-
+from knn import predict_class
+import pickle
 
 def combine_voters(voters, k, num_classes):
     """
@@ -13,19 +13,36 @@ def combine_voters(voters, k, num_classes):
     all_dist = []
     for v in voters:
         all_dist += v
-    knn = sorted(all_dist, key= lambda x: x.val)
+
+    knn = sorted(all_dist, key=lambda x: x.val)
     knn = knn[:k]
+    cls = predict_class(knn, num_classes)
+    return cls
 
-    votes = [0 for i in range(num_classes)]
-    for n in knn:
-        votes[n[1]] += 1
+def combine_votes_different_files(file_list, k, num_classes):
+    results = []
+    for file in file_list:
+        with open(file,'rb') as f:
+            results.append(pickle.load(f))
 
-    imax = 0
-    max = 0
+    predictions = []
+    for sample in range(len(results[0])):
+        voters = []
+        for r in range(len(results)):
+            voters.append(results[r][sample])
+        cls = combine_voters(voters, k, num_classes)
+        predictions.append(cls)
+    return predictions
 
-    for i,v in enumerate(votes):
-        if v > max:
-            max = v
-            imax = i
 
-    return imax
+
+def merge_results(file_list, k, num_classes):
+    results = []
+    for file in file_list:
+        with open(file, 'rb') as f:
+            results+= pickle.load(f)
+    predictions = []
+    for sample in range(len(results)):
+        cls = predict_class(results[sample], num_classes)
+        predictions.append(cls)
+    return predictions

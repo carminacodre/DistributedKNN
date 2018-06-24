@@ -23,6 +23,21 @@ def get_neighbors(X_train, Y_train, x_test, distance, k):
     else:
         return distances_sorted
 
+def predict_class(knn, num_classes):
+
+    votes = [0 for i in range(num_classes)]
+    for n in knn:
+        votes[n.cls] += 1
+
+    imax = 0
+    max = 0
+
+    for i, v in enumerate(votes):
+        if v > max:
+            max = v
+            imax = i
+    return imax
+
 
 class KNNReducer:
     def __init__(self, distance, k):
